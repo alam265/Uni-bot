@@ -1,8 +1,7 @@
-from pyexpat import model
+import asyncio
 from dotenv import load_dotenv
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Form, Request, WebSocket, WebSocketDisconnect
 from google import genai
-from pydantic import BaseModel
 import os
 from google.genai import types
 from typing import Annotated
@@ -33,54 +32,66 @@ system_instruction=(
         "Only add a 'Details' section if the topic is complex or requires deep explanation."
         "Try to answer it in bullet points"
     ),
-    temperature=0.7 
+    temperature=0.7
+
 )
 
-
-# Create a chat session
-chat = client.chats.create(
-    model='gemini-3-flash-preview',
-    config=my_config
-    
-    )
-
-chat_req = []
-
-@app.post("/chat", response_class=HTMLResponse)
-def chat_bot(req: Request, user_input: Annotated[str, Form()]):
-    # Query the DB for the 3 most relevant text chunks
-    results = collection.query(
-        query_texts=[user_input],
-        n_results=3
-    )
-    retrieved_context = "\n\n".join(results['documents'][0])
-    augmented_message = f"""
-        You are a helpful assistant for my university.
-        Use the following retrieved context to answer the question below. 
-        If the answer isn't in the context, say you don't know.
-
-        CONTEXT FROM DATABASE:
-        {retrieved_context}
-
-        USER QUESTION:
-        {user_input}
-        """
-
-    chat_req.append(user_input)
-    
-    response = chat.send_message(augmented_message)
-    
-    chat_req.append(response.text)
-
-
-    return templates.TemplateResponse("home.html", {"request": req, "chat_responses": chat_req})
 
 @app.get("/home", response_class=HTMLResponse)
 def welcome(req: Request):
     return templates.TemplateResponse("home.html", {"request": req})
 
 
+@app.websocket("/ws")
+async def chat(websocket: WebSocket):
+    
+    await websocket.accept() 
+    chat_session = client.chats.create(
+        model='gemini-3-flash-preview', 
+        config=my_config
+    )
+    
+    # Local history for this connection only
+    chat_response = []
+    try:
+        while True:
+            user_input = await websocket.receive_text() 
+    
 
+            results = collection.query(
+            query_texts=[user_input],
+                n_results=3
+            )
+            retrieved_context = "\n\n".join(results['documents'][0])
+            augmented_message = f"""
+                You are a helpful assistant for my university.
+                Use the following retrieved context to answer the question below. 
+                If the answer isn't in the context, say you don't know.
+
+                CONTEXT FROM DATABASE:
+                {retrieved_context}
+
+                USER QUESTION:
+                {user_input}
+                """
+
+            chat_response.append(user_input)
+            
+            ai_response = ""
+            response_stream = chat_session.send_message_stream(augmented_message)
+            for chunk in response_stream:
+                    if chunk.text:
+                        ai_response += chunk.text
+                        await websocket.send_text(chunk.text)
+                        await asyncio.sleep(0.10)
+            
+            chat_response.append(ai_response)
+           
+
+    except WebSocketDisconnect:
+        print("Client disconnected")
+    except Exception as e:
+        print(f"Error: {e}")
 
 
 
