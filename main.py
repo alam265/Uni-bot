@@ -1,15 +1,14 @@
 import asyncio
 from dotenv import load_dotenv
-from fastapi import FastAPI, Form, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from google import genai
 import os
 from google.genai import types
-from typing import Annotated
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 import chromadb
 from chromadb.utils import embedding_functions
-from pypdf import PdfReader
+
 
 chroma_client = chromadb.PersistentClient(path="./university_db")
 sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
