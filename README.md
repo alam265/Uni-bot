@@ -1,7 +1,3 @@
-Below is a **GitHub-ready, concise, and professional README.md**, optimized for **project submission**. It’s clean, minimal, and follows common open-source standards.
-
----
-
 # 🎓 Uni-Bot -- BRAC University Chatbot
 
 A **domain-specific chatbot for BRAC University queries**, built using **Gemini API (Free Tier)** and **FastAPI**, leveraging **Retrieval-Augmented Generation (RAG)** to provide context-aware responses.
