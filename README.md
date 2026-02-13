@@ -6,6 +6,17 @@ A **domain-specific chatbot for BRAC University queries**, built using **Gemini 
 
 ---
 
+# 🌐 Live Demo
+
+🔗 Deployed Application:
+https://uni-bot-1.onrender.com/home
+
+> ⚠️ Notes:
+
+> Initial response may be slow due to Render free-tier cold starts
+
+Answer quality depends on the current dataset size
+
 ## 📖 About the Project
 
 This chatbot answers queries related to **BRAC University** by retrieving relevant information from a custom knowledge base before generating responses using a large language model.
@@ -51,7 +62,7 @@ This chatbot answers queries related to **BRAC University** by retrieving releva
 * Python 3.9+
 * Gemini API key
 
-### Installation
+### Installation (local Machone)
 
 ```bash
 git clone www.github.com/alam265/Uni-bot
